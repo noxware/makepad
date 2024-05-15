@@ -1,6 +1,6 @@
 use {
     crate::makepad_draw::*,
-    std::{any::TypeId, borrow::Borrow, cell::RefCell, collections::BTreeMap, fmt::{self, Debug, Error, Formatter}, rc::Rc, ops::{Deref, DerefMut}}
+    std::{any::TypeId, borrow::Borrow, cell::{RefCell, Ref, RefMut}, collections::BTreeMap, fmt::{self, Debug, Error, Formatter}, rc::Rc}
 };
 pub use crate::register_widget;
 
@@ -164,20 +164,6 @@ impl Default for WidgetRef {
 impl Debug for WidgetRef {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         write!(f, "WidgetRef {}", self.widget_uid().0)
-    }
-}
-
-impl Deref for WidgetRef {
-    type Target = Ref<Box<dyn Widget>>;
-
-    fn deref(&self) -> &Self::Target {
-        &RefCell::borrow(&self.0)
-    }
-}
-
-impl DerefMut for WidgetRef {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut RefCell::borrow_mut(&self.0)
     }
 }
 
@@ -548,38 +534,35 @@ impl WidgetRef {
         self.set_text_and_redraw(cx, v);
     }
     
-    pub fn borrow_mut<T: 'static + Widget>(&self) -> Option<std::cell::RefMut<'_, T >> {
-        if let Ok(ret) = std::cell::RefMut::filter_map(self, | inner | {
+    pub fn borrow_mut<T: 'static + Widget>(&self) -> Option<std::cell::RefMut<'_, T>> {
+        if let Ok(ret) = RefMut::filter_map(RefCell::borrow_mut(&self.0), |inner| {
             if inner.downcast_ref::<EmptyWidget>().is_some() {
                 None
-            }
-            else {
+            } else {
                 inner.downcast_mut::<T>()
             }
         }) {
             Some(ret)
-        }
-        else {
+        } else {
             None
         }
     }
     
-    pub fn borrow<T: 'static + Widget>(&self) -> Option<std::cell::Ref<'_, T >> {
-        if let Ok(ret) = std::cell::Ref::filter_map(self, | inner | {
+    pub fn borrow<T: 'static + Widget>(&self) -> Option<std::cell::Ref<'_, T>> {
+        if let Ok(ret) = Ref::filter_map(RefCell::borrow(&self.0), |inner| {
             if inner.downcast_ref::<EmptyWidget>().is_some() {
                 None
-            }
-            else {
+            } else {
                 inner.downcast_ref::<T>()
             }
         }) {
             Some(ret)
-        }
-        else {
+        } else {
             None
         }
     }
     
+
     pub fn apply_over(&self, cx: &mut Cx, nodes: &[LiveNode]) {
         self.apply(cx, &mut ApplyFrom::Over.into(), 0, nodes);
     }

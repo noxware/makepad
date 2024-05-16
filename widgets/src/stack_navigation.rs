@@ -81,7 +81,7 @@ impl Widget for StackNavigationView {
 
 impl WidgetMatchEvent for StackNavigationView {
     fn handle_actions(&mut self, cx: &mut Cx, actions: &Actions, _scope: &mut Scope) {
-        let left_button_clicked = self.button(id!(left_button)).clicked(&actions);
+        let left_button_clicked = self.button(id!(left_button)).as_ref().clicked(&actions);
         if left_button_clicked {
             self.hide_stack_view(cx);
         }

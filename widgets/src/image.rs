@@ -114,6 +114,11 @@ impl Image {
         
         DrawStep::done()
     }
+
+    /// Loads the image at the given `image_path` on disk into this `Image`.
+    pub fn load_image_from_path(&mut self, cx: &mut Cx, image_path: &str) -> Result<(), ImageError> {
+        self.load_image_file_by_path(cx, image_path, 0)
+    }   
 }
 
 impl ImageRef {
@@ -124,8 +129,8 @@ impl ImageRef {
         } else {
             Ok(()) // preserving existing behavior of silent failures.
         }
-    }
-    
+    } 
+
     /// Loads the image at the given `image_path` on disk into this `ImageRef`.
     pub fn load_image_file_by_path(&self, cx: &mut Cx, image_path: &str) -> Result<(), ImageError> {
         if let Some(mut inner) = self.borrow_mut() {

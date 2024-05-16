@@ -1,11 +1,6 @@
 use {
     crate::makepad_draw::*,
-    std::fmt::{Formatter, Debug, Error},
-    std::collections::BTreeMap,
-    std::any::TypeId,
-    std::cell::RefCell,
-    std::rc::Rc,
-    std::fmt
+    std::{any::TypeId, cell::{RefCell, RefMut, Ref}, collections::BTreeMap, fmt::{self, Debug, Error, Formatter}, rc::Rc}
 };
 pub use crate::register_widget;
 
@@ -37,7 +32,7 @@ pub trait Widget: WidgetNode {
         self.find_widgets(path, WidgetCache::Yes, &mut results);
         return results.into_first()
     }
-    
+
     fn widgets(&mut self, paths: &[&[LiveId]]) -> WidgetSet {
         let mut results = WidgetSet::default();
         for path in paths {
@@ -357,6 +352,42 @@ impl PartialEq for WidgetRef {
 }
 
 impl WidgetRef {
+    pub fn as_ref<W: Widget + 'static>(&self) -> Ref<W> {
+        Ref::map(self.0.borrow(), |inner| {
+            inner.as_ref().unwrap().widget.downcast_ref::<W>().unwrap()
+        })
+    }
+
+    pub fn as_ref_mut<W: Widget + 'static>(&self) -> RefMut<W> {
+        RefMut::map(self.0.borrow_mut(), |inner| {
+            inner.as_mut().unwrap().widget.downcast_mut::<W>().unwrap()
+        })
+    }
+
+    pub fn widget_ref<W: Widget + 'static>(&self) -> Ref<W> {
+        self.as_ref()
+    }
+
+    pub fn widget_ref_mut<W: Widget + 'static>(&self) -> RefMut<W> {
+        self.as_ref_mut()
+    }
+
+    pub fn try_as_ref<W: Widget + 'static>(&self) -> Option<Ref<W>> {
+        Ref::filter_map(self.0.borrow(), |inner| {
+            inner.as_ref().unwrap().widget.downcast_ref::<W>()
+        }).ok()
+    }
+
+    pub fn try_as_ref_mut<W: Widget + 'static>(&self) -> Option<RefMut<W>> {
+        RefMut::filter_map(self.0.borrow_mut(), |inner| {
+            inner.as_mut().unwrap().widget.downcast_mut::<W>()
+        }).ok()
+    }
+
+    pub fn is<W: Widget + 'static>(&self) -> bool {
+        self.try_as_ref::<W>().is_some()
+    }
+
     pub fn empty() -> Self {Self (Rc::new(RefCell::new(None)))}
     
     pub fn is_empty(&self) -> bool {

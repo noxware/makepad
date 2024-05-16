@@ -307,6 +307,15 @@ pub fn derive_widget_ref_impl(input: TokenStream) -> TokenStream {
             tb.add("        ").ident(&ref_name).add("(self.widget(path))");
             tb.add("    }");
             tb.add("}");
+
+            tb.add("impl ").ident(&ref_name).add("{");
+            tb.add("    pub fn as_ref(&self) -> std::cell::Ref<'_, ").ident(&clean_name).add(" > {");
+            tb.add("        self.0.as_ref::<").ident(&clean_name).add(">()");
+            tb.add("    }");
+            tb.add("    pub fn as_ref_mut(&self) -> std::cell::RefMut<'_, ").ident(&clean_name).add(" > {");
+            tb.add("        self.0.as_ref_mut::<").ident(&clean_name).add(">()");
+            tb.add("    }");
+            tb.add("}");
             
             return tb.end();
         }

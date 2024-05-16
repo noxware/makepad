@@ -26,7 +26,7 @@ live_design!{
                         y: 0.5
                     },
                     button1 = <Button> {
-                        text: "Hello world"
+                        text: "Hello worlddddddd"
                         draw_text:{color:#f00}
                     }
                     input1 = <TextInput> {

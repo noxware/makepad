@@ -9,7 +9,7 @@ live_design!(
 
     Ui = {{Ui}} {
         flow: Right
-        padding: { top: 30 }
+        padding: { top: 30 } 
         show_bg: true
         draw_bg: {
             fn pixel(self) -> vec4 {
@@ -43,6 +43,7 @@ impl Widget for Ui {
     }
 
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
+        println!("A");
         let state = scope.data.get::<State>().unwrap();
         let img = self.deref.image(id!(img));
 
@@ -58,8 +59,11 @@ impl Widget for Ui {
             .collect::<Vec<_>>();
 
         let range_end = state.images.len();
+        println!("B");
         while let Some(widget) = self.deref.draw_walk(cx, scope, walk).step() {
+            println!("C");
             if let Some(mut img_list) = widget.as_portal_list().borrow_mut() {
+                println!("D");
                 img_list.set_item_range(cx, 0, range_end);
 
                 while let Some(index) = img_list.next_visible_item(cx) {

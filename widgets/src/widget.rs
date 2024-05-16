@@ -260,10 +260,6 @@ impl WidgetSet {
     pub fn widgets(&self, paths: &[&[LiveId]]) -> WidgetSet {
         let mut results = WidgetSet::default();
         for widget in self.iter() {
-            if widget.is_empty() {
-                continue;
-            }
-
             for path in paths {
                 widget.0.borrow_mut().find_widgets(path, WidgetCache::Yes, &mut results);
             }
@@ -375,9 +371,7 @@ impl WidgetRef {
     }
     
     pub fn handle_event(&self, cx: &mut Cx, event: &Event, scope:&mut Scope) {
-        if self.is_empty() {
-            return;
-        }
+
 
         // if we're in a draw event, do that here
         if let Event::Draw(e) = event {
@@ -388,25 +382,15 @@ impl WidgetRef {
     }
     
     pub fn widget_uid(&self) -> WidgetUid {
-        if self.is_empty() {
-            return WidgetUid(0);
-        }
-
         RefCell::borrow(&self.0).widget_uid()
     }
     
     pub fn widget_to_data(&self, cx: &mut Cx, actions: &Actions, nodes: &mut LiveNodeVec, path: &[LiveId]) -> bool {
-        if self.is_empty() {
-            return false;
-        }
-
         RefCell::borrow(&self.0).widget_to_data(cx, actions, nodes, path)
     }
     
     pub fn data_to_widget(&self, cx: &mut Cx, nodes: &[LiveNode], path: &[LiveId]) {
-        if self.is_empty() {
-            return;
-        }
+
 
         RefCell::borrow_mut(&self.0).data_to_widget(cx, nodes, path)
     }
@@ -417,106 +401,66 @@ impl WidgetRef {
         cached: WidgetCache,
         results: &mut WidgetSet
     ) {
-        if self.is_empty() {
-            return;
-        }
+
 
         RefCell::borrow_mut(&self.0).find_widgets(path, cached, results)
     }
     
     pub fn widget(&self, path: &[LiveId]) -> WidgetRef {
-        if self.is_empty() {
-            return WidgetRef::empty();
-        }
-
         RefCell::borrow_mut(&self.0).widget(path)
     }
     
     pub fn widgets(&self, paths: &[&[LiveId]]) -> WidgetSet {
-        if self.is_empty() {
-            return WidgetSet::default();
-        }
-
         RefCell::borrow_mut(&self.0).widgets(paths)
     }
     
     pub fn draw_walk(&self, cx: &mut Cx2d, scope:&mut Scope, walk: Walk) -> DrawStep {
-        if self.is_empty() {
-            return DrawStep::done();
-        }
-
         RefCell::borrow_mut(&self.0).draw_walk(cx, scope, walk)
     }
     
     pub fn draw_walk_all(&self, cx: &mut Cx2d, scope:&mut Scope, walk: Walk) {
-        if self.is_empty() {
-            return;
-        }
+
 
         RefCell::borrow_mut(&self.0).draw_walk_all(cx, scope, walk)
     }
     
     pub fn draw(&mut self, cx: &mut Cx2d, scope: &mut Scope) -> DrawStep {
-        if self.is_empty() {
-            return DrawStep::done();
-        }
-
         RefCell::borrow_mut(&self.0).draw(cx, scope)
     }
     
     pub fn walk(&self, cx:&mut Cx) -> Walk {
-        if self.is_empty() {
-            return Walk::default();
-        }
-
         RefCell::borrow_mut(&self.0).walk(cx)
     }
     
     // forwarding Widget trait
     pub fn redraw(&self, cx: &mut Cx) {
-        if self.is_empty() {
-            return;
-        }
+
 
         RefCell::borrow_mut(&self.0).redraw(cx)
     }
     
     pub fn is_visible(&self) -> bool {
-        if self.is_empty() {
-            return true;
-        }
-
         RefCell::borrow(&self.0).is_visible()
     }
     
     pub fn draw_all(&self, cx: &mut Cx2d, scope:&mut Scope) {
-        if self.is_empty() {
-            return;
-        }
+
 
         RefCell::borrow_mut(&self.0).draw_all(cx, scope)
     }
     
     pub fn text(&self) -> String {
-        if self.is_empty() {
-            return String::new();
-        }
-
         RefCell::borrow(&self.0).text()
     }
     
     pub fn set_text(&self, v: &str) {
-        if self.is_empty() {
-            return;
-        }
+
 
         RefCell::borrow_mut(&self.0).set_text(v)
     }
     
     pub fn set_text_and_redraw(&self, cx: &mut Cx, v: &str) {
-        if self.is_empty() {
-            return;
-        }
+
 
         RefCell::borrow_mut(&self.0).set_text_and_redraw(cx, v)
     }
@@ -524,6 +468,7 @@ impl WidgetRef {
     pub fn borrow_mut<T: 'static + Widget>(&self) -> Option<std::cell::RefMut<'_, T>> {
         if let Ok(ret) = RefMut::filter_map(RefCell::borrow_mut(&self.0), |inner| {
             if inner.downcast_ref::<EmptyWidget>().is_some() {
+                println!("EMPTY WIDGET");
                 None
             } else {
                 inner.downcast_mut::<T>()
@@ -848,6 +793,14 @@ impl Widget for EmptyWidget {
     
     fn draw_walk(&mut self, _cx: &mut Cx2d, _scope: &mut Scope, _walk: Walk) -> DrawStep {
         DrawStep::done()
+    }
+
+    fn widget_to_data(&self, _cx: &mut Cx, _actions: &Actions, _nodes: &mut LiveNodeVec, _path: &[LiveId]) -> bool {
+        false
+    }
+
+    fn widget_uid(&self) -> WidgetUid {
+        WidgetUid(0)
     }
 }
 

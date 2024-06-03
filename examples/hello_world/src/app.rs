@@ -3,18 +3,10 @@ use makepad_widgets::*;
 live_design!(
     import makepad_widgets::base::*;
     import makepad_widgets::theme_desktop_dark::*;
+    import crate::ui::*;
 
     App = {{App}} {
-        ui: <Window> {
-            align: {x: 0.5, y: 0.5}
-            body = <Label> {
-                text: "Hello, world!"
-                draw_text: {
-                    text_style: {font_size: 12.0},
-                }
-            }
-            
-        }
+        ui: <Ui> {}
     }
 );
 
@@ -33,6 +25,7 @@ impl AppMain for App {
 impl LiveRegister for App {
     fn live_register(cx: &mut Cx) {
         makepad_widgets::live_design(cx);
+        crate::ui::live_design(cx);
     }
 }
 

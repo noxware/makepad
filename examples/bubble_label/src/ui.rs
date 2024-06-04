@@ -18,7 +18,21 @@ live_design!(
                 draw_bg: {
                     color: #066,
                 }
-                <BubbleLabel> {}
+                <BubbleLabel> {
+                    bubble: {
+                        padding: 8,
+                        draw_bg: {
+                            color: #317,
+                        }
+                    }
+                    label: {
+                        text: "dslkfnjdsklfjnsdkljfdslkjflsdj ldsfjklsdjflsjf",
+                        draw_text: {
+                            text_style: {font_size: 30.0},
+                            wrap: Word,
+                        }
+                    }
+                }
             }
         }
     }

@@ -4,38 +4,30 @@ live_design!(
     import makepad_widgets::base::*;
     import makepad_widgets::theme_desktop_dark::*;
 
-    bubble = <RoundedView> {
-        padding: 8,
-        width: Fit,
+    BubbleTemplate = <RoundedView> {
         height: Fit,
-        draw_bg: {
-            color: #317,
-        }
     }
 
-
-    label = <Label> {
-        text: "Hello, world!"
-        draw_text: {
-            text_style: {font_size: 12.0},
-        }
-    }
+    LabelTemplate = <Label> {}
 
     BubbleLabel = {{BubbleLabel}} {
+        label: <LabelTemplate> {}
+        bubble: <BubbleTemplate> {}
+
         width: Fill,
         <View> {
             width: 0,
             height: 0,
-            meassure_bubble = <bubble> {
+            meassure_bubble = <BubbleTemplate> {
                 width: Fit,
-                <label> {
+                meassure_label = <LabelTemplate> {
                     width: Fit,
                 }
             }
         }
-        displayed_bubble = <bubble> {
+        displayed_bubble = <BubbleTemplate> {
             width: 0,
-            <label> {
+            displayed_label = <LabelTemplate> {
                 width: Fill,
             }
         }
@@ -49,6 +41,12 @@ pub struct BubbleLabel {
 
     #[rust]
     did_redraw: bool,
+
+    #[live]
+    label: Option<LivePtr>,
+
+    #[live]
+    bubble: Option<LivePtr>,
 }
 
 impl Widget for BubbleLabel {
@@ -57,6 +55,11 @@ impl Widget for BubbleLabel {
     }
 
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
+        self.deref.view(id!(meassure_bubble)).apply_from_ptr(cx, self.bubble);
+        self.deref.view(id!(displayed_bubble)).apply_from_ptr(cx, self.bubble);
+        self.deref.label(id!(meassure_label)).apply_from_ptr(cx, self.label);
+        self.deref.label(id!(displayed_label)).apply_from_ptr(cx, self.label);
+
         while !self.deref.draw_walk(cx, scope, walk).is_done() {}
         let available_width = self.deref.area().rect(&cx.cx).size.x;
         let requested_width = self.deref.view(id!(meassure_bubble)).area().rect(&cx.cx).size.x;
@@ -69,6 +72,7 @@ impl Widget for BubbleLabel {
                 width: (available_width)
             ));
         } else {
+            dbg!("else");
             self.deref.view(id!(displayed_bubble)).apply_over(cx, live!(
                 width: (requested_width)
             ));

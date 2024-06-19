@@ -1,3 +1,5 @@
+use std::default;
+
 use makepad_widgets::*;
 
 live_design!(
@@ -23,6 +25,13 @@ live_design!(
     }
 );
 
+#[derive(Default)]
+enum DrawMode {
+    #[default]
+    Normal,
+    Measure,
+}
+
 #[derive(Live, LiveHook, Widget)]
 pub struct BubbleLabel {
     #[deref]
@@ -30,6 +39,9 @@ pub struct BubbleLabel {
 
     #[rust]
     available_width: f64,
+
+    #[rust]
+    draw_mode: DrawMode,
 }
 
 impl Widget for BubbleLabel {
@@ -38,55 +50,70 @@ impl Widget for BubbleLabel {
     }
 
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
+        match self.draw_mode {
+            DrawMode::Normal => self.draw_normal(cx, scope, walk),
+            DrawMode::Measure => self.draw_measure(cx, scope, walk),
+        }
+
+        DrawStep::done()
+    }
+}
+
+impl BubbleLabel {
+    fn draw_normal(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) {
         while !self.parent.draw_walk(cx, scope, walk).is_done() {}
         let new_available_width = self.area().rect(cx).size.x;
 
         dbg!(new_available_width);
 
-        if new_available_width != self.available_width {
+        if self.available_width != new_available_width {
             self.available_width = new_available_width;
-
-            let bubble = self.view(id!(bubble));
-            let label = self.label(id!(label));
-
-            label.apply_over(
-                cx,
-                live!(
-                    width: Fit
-                ),
-            );
-
-            bubble.apply_over(
-                cx,
-                live!(
-                    width: Fit
-                ),
-            );
-
-            while !self.parent.draw_walk(cx, scope, walk).is_done() {}
-            let requested_width = bubble.area().rect(cx).size.x;
-
-            dbg!(requested_width);
-
-            let new_width = requested_width.min(self.available_width);
-
-            bubble.apply_over(
-                cx,
-                live!(
-                    width: (new_width)
-                ),
-            );
-
-            label.apply_over(
-                cx,
-                live!(
-                    width: Fill
-                ),
-            );
-
-            while !self.parent.draw_walk(cx, scope, walk).is_done() {}
+            self.draw_mode = DrawMode::Measure;
+            self.redraw(cx);
         }
+    }
 
-        DrawStep::done()
+    fn draw_measure(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) {
+        let bubble = self.view(id!(bubble));
+        let label = self.label(id!(label));
+
+        label.apply_over(
+            cx,
+            live!(
+                width: Fit
+            ),
+        );
+
+        bubble.apply_over(
+            cx,
+            live!(
+                width: Fit
+            ),
+        );
+
+        while !self.parent.draw_walk(cx, scope, walk).is_done() {}
+        let requested_width = bubble.area().rect(cx).size.x;
+
+        dbg!(requested_width);
+
+        // + 0.1 or the content will wrap.
+        let new_width = requested_width.min(self.available_width) + 0.1;
+
+        bubble.apply_over(
+            cx,
+            live!(
+                width: (new_width)
+            ),
+        );
+
+        label.apply_over(
+            cx,
+            live!(
+                width: Fill
+            ),
+        );
+
+        self.draw_mode = DrawMode::Normal;
+        self.redraw(cx);
     }
 }

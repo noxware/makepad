@@ -5,9 +5,10 @@ live_design!(
     import makepad_widgets::theme_desktop_dark::*;
 
     BubbleLabel = {{BubbleLabel}} {
+        width: Fill,
+        height: Fit,
         bubble = <RoundedView> {
             padding: 8,
-            width: Fit,
             height: Fit,
             draw_bg: {
                 color: #317,
@@ -25,55 +26,67 @@ live_design!(
 #[derive(Live, LiveHook, Widget)]
 pub struct BubbleLabel {
     #[deref]
-    deref: View,
+    parent: View,
 
     #[rust]
-    did_redraw: bool,
+    available_width: f64,
 }
 
 impl Widget for BubbleLabel {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
-        self.deref.handle_event(cx, event, scope);
+        self.parent.handle_event(cx, event, scope);
     }
 
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
-        self.deref.apply_over(cx, live!(
-            width: 0.0,
-        ));
+        while !self.parent.draw_walk(cx, scope, walk).is_done() {}
+        let new_available_width = self.area().rect(cx).size.x;
 
-        self.deref.label(id!(label)).apply_over(cx, live!(
-            width: Fit,
-        ));
+        dbg!(new_available_width);
 
-        self.deref.view(id!(bubble)).apply_over(cx, live!(
-            width: Fit,
-        ));
+        if new_available_width != self.available_width {
+            self.available_width = new_available_width;
 
-        while !self.deref.draw_walk(cx, scope, walk).is_done() {}
-        let available_width = self.deref.area().rect(&cx.cx).size.x;
-        let requested_width = self.deref.view(id!(bubble)).area().rect(&cx.cx).size.x;
+            let bubble = self.view(id!(bubble));
+            let label = self.label(id!(label));
 
-        dbg!(requested_width);
-        dbg!(available_width);
+            label.apply_over(
+                cx,
+                live!(
+                    width: Fit
+                ),
+            );
 
-        self.deref.apply_over(cx, live!(
-            width: Fill,
-        ));
+            bubble.apply_over(
+                cx,
+                live!(
+                    width: Fit
+                ),
+            );
 
-        self.deref.label(id!(label)).apply_over(cx, live!(
-            width: Fill,
-        ));
+            while !self.parent.draw_walk(cx, scope, walk).is_done() {}
+            let requested_width = bubble.area().rect(cx).size.x;
 
-        if available_width < requested_width {
-            self.deref.view(id!(bubble)).apply_over(cx, live!(
-                width: (available_width)
-            ));
-        } else {
-            self.deref.view(id!(bubble)).apply_over(cx, live!(
-                width: (requested_width)
-            ));
+            dbg!(requested_width);
+
+            let new_width = requested_width.min(self.available_width);
+
+            bubble.apply_over(
+                cx,
+                live!(
+                    width: (new_width)
+                ),
+            );
+
+            label.apply_over(
+                cx,
+                live!(
+                    width: Fill
+                ),
+            );
+
+            while !self.parent.draw_walk(cx, scope, walk).is_done() {}
         }
 
-        self.deref.draw_walk(cx, scope, walk)
+        DrawStep::done()
     }
 }

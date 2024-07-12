@@ -1,3 +1,3 @@
 fn main() {
-    hello_world_widgets::app::app_main()
+    meh::app::app_main()
 }

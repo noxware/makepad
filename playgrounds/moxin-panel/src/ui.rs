@@ -1,35 +1,42 @@
 use makepad_widgets::*;
 
+use crate::panel::PanelWidgetExt;
+
 live_design!(
     import makepad_widgets::base::*;
     import makepad_widgets::theme_desktop_dark::*;
+    import crate::panel::*;
 
     Ui = {{Ui}} {
         align: {x: 0.5, y: 0.5}
-        body = <Splitter> {
-            axis: Horizontal,
-            align: FromA(150.0),
-            min_horizontal: 0.0,
-            min_vertical: 0.0,
-            //split_bar_size: 0.2,
-            a: <View> {
-                show_bg: true,
-                draw_bg: {color: #f00},
-            },
-            b: <Splitter> {
-                axis: Horizontal,
-                align: FromB(150.0),
-                min_horizontal: 0.0,
-                min_vertical: 0.0,
-                a: <View> {
-                    show_bg: true,
-                    draw_bg: {color: #0f0},
-                },
-                b: <View> {
-                    show_bg: true,
-                    draw_bg: {color: #00f},
-                },
-            },
+        body = <View> {
+            padding: {top: 32}
+            panel = <Panel> {
+                persistent_content = {
+                    <View> {
+                        height: Fit
+                        show_bg: true
+                        draw_bg: {
+                            fn pixel() -> vec4 {
+                                return #a22
+                            }
+                        }
+                        toggle = <Button> {text: "Toggle"}
+                    }
+                }
+                open_content = {
+                    <View> {
+                        show_bg: true
+                        draw_bg: {
+                            fn pixel() -> vec4 {
+                                return #22a
+                            }
+                        }
+                        padding: {top: 40}
+                    }
+
+                }
+            }
         }
     }
 );
@@ -42,6 +49,15 @@ pub struct Ui {
 
 impl Widget for Ui {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
+        if let Event::Actions(actions) = event {
+            if self.button(id!(toggle)).clicked(actions) {
+                println!("Toggle button clicked");
+                let mut panel = self.panel(id!(panel));
+                panel.set_open(!panel.is_open());
+                self.redraw(cx);
+            }
+        }
+
         self.deref.handle_event(cx, event, scope);
     }
 

@@ -53,7 +53,7 @@ impl Widget for Ui {
             if self.button(id!(toggle)).clicked(actions) {
                 println!("Toggle button clicked");
                 let mut panel = self.panel(id!(panel));
-                panel.set_open(!panel.is_open());
+                panel.set_open(cx, !panel.is_open());
                 self.redraw(cx);
             }
         }

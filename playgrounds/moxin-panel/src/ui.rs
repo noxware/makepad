@@ -15,22 +15,15 @@ live_design!(
             padding: {top: 32}
             panel = <Panel> {
                 persistent_content = {
+                    toggle = <Button> {text: "Toggle"}
+                }
+                open_content = {
                     <View> {
-                        height: Fit
                         show_bg: true
                         draw_bg: {
                             fn pixel() -> vec4 {
-                                return #a22
+                                return #2a2
                             }
-                        }
-                        toggle = <Button> {text: "Toggle"}
-                    }
-                }
-                open_content = {
-                    height: Fill
-                    draw_bg: {
-                        fn pixel() -> vec4 {
-                            return #2a2
                         }
                     }
                 }

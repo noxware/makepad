@@ -12,7 +12,7 @@ live_design!(
         body = <View> {
             padding: {top: 32}
             panel = <Panel> {
-                persistent_content = {
+                /*persistent_content = {
                     <View> {
                         height: Fit
                         show_bg: true
@@ -35,7 +35,7 @@ live_design!(
                         padding: {top: 40}
                     }
 
-                }
+                }*/
             }
         }
     }
@@ -49,14 +49,14 @@ pub struct Ui {
 
 impl Widget for Ui {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
-        if let Event::Actions(actions) = event {
+        /*if let Event::Actions(actions) = event {
             if self.button(id!(toggle)).clicked(actions) {
                 println!("Toggle button clicked");
                 let mut panel = self.panel(id!(panel));
                 panel.set_open(cx, !panel.is_open());
                 self.redraw(cx);
             }
-        }
+        }*/
 
         self.deref.handle_event(cx, event, scope);
     }

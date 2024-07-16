@@ -28,6 +28,7 @@ live_design! {
 
         persistent_content = <View> {
             height: Fit
+            width: 110
             flow: Right
         }
 

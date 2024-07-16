@@ -1,6 +1,6 @@
 use makepad_widgets::*;
 
-live_design!(
+live_design! {
     import makepad_widgets::base::*;
     import makepad_widgets::theme_desktop_dark::*;
     import makepad_draw::shader::std::*;
@@ -16,81 +16,123 @@ live_design!(
         }
     }
 
-    Panel = {{Panel}} {
-        flow: Overlay,
-        width: 300
-        open_content = <FadeView> {
-            <Label> {text: "Open content"}
+    PanelActions = <View> {
+        height: Fit
+        flow: Right
+
+        <View> {
+            width: Fill
+            height: Fit
         }
-        persistent_content = <View> {
-            <Label> {text: "Persistent content"}
+
+
+        close_panel_button = <Button> {
+            width: Fit,
+            height: Fit,
+            text: "Close",
+        }
+
+        open_panel_button = <Button> {
+            width: Fit,
+            height: Fit,
+            visible: false,
+            text: "Open",
         }
     }
-);
+
+    Panel = {{Panel}} {
+        flow: Overlay,
+        width: Fit,
+        height: Fill,
+
+        main_content = <FadeView> {
+            width: 300
+            height: Fill
+            <View> {
+                width: Fill
+                height: Fill
+                padding: {top: 70, left: 25.0, right: 25.0}
+                spacing: 35
+                flow: Down
+                show_bg: true
+                draw_bg: {
+                    color: #F2F4F7
+                }
+
+                <Label> {
+                    draw_text: {
+                        text_style: {font_size: 12}
+                        color: #000
+                    }
+                    text: "Inference Parameters"
+                }
+
+            }
+        }
+
+        <PanelActions> {
+            padding: {top: 58, left: 25, right: 25}
+        }
+
+        animator: {
+            panel = {
+                default: show,
+                show = {
+                    redraw: true,
+                    from: {all: Forward {duration: 0.3}}
+                    ease: ExpDecay {d1: 0.80, d2: 0.97}
+                    apply: {main_content = { width: 300, draw_bg: {opacity: 1.0} }}
+                }
+                hide = {
+                    redraw: true,
+                    from: {all: Forward {duration: 0.3}}
+                    ease: ExpDecay {d1: 0.80, d2: 0.97}
+                    apply: {main_content = { width: 110, draw_bg: {opacity: 0.0} }}
+                }
+            }
+        }
+    }
+}
 
 #[derive(Live, LiveHook, Widget)]
 pub struct Panel {
     #[deref]
-    parent: View,
-    #[live]
-    open: bool,
-    #[live]
-    open_width: f32,
-    #[rust]
-    initialized: bool,
-    /*
-    #[live]
-    persistent_content: View,
-    #[live]
-    open_content: View,
-    */
+    view: View,
+
+    #[animator]
+    animator: Animator,
 }
 
 impl Widget for Panel {
-    fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
-        if !self.initialized {
-            self.initialized = true;
-            self.update_width(cx);
-        }
-
-        self.parent.draw_walk(cx, scope, walk)
-    }
-
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
-        self.parent.handle_event(cx, event, scope)
-    }
-}
+        self.view.handle_event(cx, event, scope);
+        self.widget_match_event(cx, event, scope);
 
-impl Panel {
-    fn update_width(&mut self, cx: &mut Cx) {
-        if self.view(id!(open_content)).is_visible() {
-            self.apply_over(
-                cx,
-                live! {
-                    width: 300
-                },
-            );
-        } else {
-            self.apply_over(
-                cx,
-                live! {
-                    width: 50
-                },
-            );
+        if self.animator_handle_event(cx, event).must_redraw() {
+            self.redraw(cx);
         }
     }
+
+    fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
+        self.view.draw_walk(cx, scope, walk)
+    }
 }
 
-impl PanelRef {
-    pub fn set_open(&mut self, cx: &mut Cx, open: bool) {
-        self.view(id!(open_content)).set_visible(open);
-        self.borrow_mut().and_then(|mut panel| {
-            panel.update_width(cx);
-            Some(())
-        });
-    }
+impl WidgetMatchEvent for Panel {
+    fn handle_actions(&mut self, cx: &mut Cx, actions: &Actions, _scope: &mut Scope) {
+        let close = self.button(id!(close_panel_button));
+        let open = self.button(id!(open_panel_button));
 
-    pub fn is_open(&self) -> bool {
-        self.view(id!(open_content)).is_visible()
+        if close.clicked(&actions) {
+            close.set_visible(false);
+            open.set_visible(true);
+            self.animator_play(cx, id!(panel.hide));
+        }
+
+        if open.clicked(&actions) {
+            open.set_visible(false);
+            close.set_visible(true);
+            self.animator_play(cx, id!(panel.show));
+        }
     }
 }

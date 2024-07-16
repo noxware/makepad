@@ -16,62 +16,19 @@ live_design! {
         }
     }
 
-    PanelActions = <View> {
-        height: Fit
-        flow: Right
-
-        <View> {
-            width: Fill
-            height: Fit
-        }
-
-
-        close_panel_button = <Button> {
-            width: Fit,
-            height: Fit,
-            text: "Close",
-        }
-
-        open_panel_button = <Button> {
-            width: Fit,
-            height: Fit,
-            visible: false,
-            text: "Open",
-        }
-    }
-
     Panel = {{Panel}} {
         flow: Overlay,
         width: Fit,
         height: Fill,
 
-        main_content = <FadeView> {
+        open_content = <FadeView> {
             width: 300
             height: Fill
-            <View> {
-                width: Fill
-                height: Fill
-                padding: {top: 70, left: 25.0, right: 25.0}
-                spacing: 35
-                flow: Down
-                show_bg: true
-                draw_bg: {
-                    color: #F2F4F7
-                }
-
-                <Label> {
-                    draw_text: {
-                        text_style: {font_size: 12}
-                        color: #000
-                    }
-                    text: "Inference Parameters"
-                }
-
-            }
         }
 
-        <PanelActions> {
-            padding: {top: 58, left: 25, right: 25}
+        persistent_content = <View> {
+            height: Fit
+            flow: Right
         }
 
         animator: {
@@ -81,13 +38,13 @@ live_design! {
                     redraw: true,
                     from: {all: Forward {duration: 0.3}}
                     ease: ExpDecay {d1: 0.80, d2: 0.97}
-                    apply: {main_content = { width: 300, draw_bg: {opacity: 1.0} }}
+                    apply: {open_content = { width: 300, draw_bg: {opacity: 1.0} }}
                 }
                 hide = {
                     redraw: true,
                     from: {all: Forward {duration: 0.3}}
                     ease: ExpDecay {d1: 0.80, d2: 0.97}
-                    apply: {main_content = { width: 110, draw_bg: {opacity: 0.0} }}
+                    apply: {open_content = { width: 110, draw_bg: {opacity: 0.0} }}
                 }
             }
         }
@@ -133,6 +90,36 @@ impl WidgetMatchEvent for Panel {
             open.set_visible(false);
             close.set_visible(true);
             self.animator_play(cx, id!(panel.show));
+        }
+    }
+}
+
+impl Panel {
+    pub fn is_open(&self, cx: &Cx) -> bool {
+        self.animator_in_state(cx, id!(panel.show))
+    }
+
+    pub fn set_open(&mut self, cx: &mut Cx, open: bool) {
+        if open {
+            self.animator_play(cx, id!(panel.show));
+        } else {
+            self.animator_play(cx, id!(panel.hide));
+        }
+    }
+}
+
+impl PanelRef {
+    pub fn is_open(&self, cx: &Cx) -> bool {
+        if let Some(inner) = self.borrow() {
+            inner.is_open(cx)
+        } else {
+            false
+        }
+    }
+
+    pub fn set_open(&self, cx: &mut Cx, open: bool) {
+        if let Some(mut inner) = self.borrow_mut() {
+            inner.set_open(cx, open);
         }
     }
 }

@@ -33,14 +33,14 @@ live_design! {
 
         animator: {
             panel = {
-                default: show,
-                show = {
+                default: open,
+                open = {
                     redraw: true,
                     from: {all: Forward {duration: 0.3}}
                     ease: ExpDecay {d1: 0.80, d2: 0.97}
                     apply: {width: 300, open_content = { draw_bg: {opacity: 1.0} }}
                 }
-                hide = {
+                close = {
                     redraw: true,
                     from: {all: Forward {duration: 0.3}}
                     ease: ExpDecay {d1: 0.80, d2: 0.97}
@@ -76,14 +76,14 @@ impl Widget for Panel {
 
 impl Panel {
     pub fn is_open(&self, cx: &Cx) -> bool {
-        self.animator_in_state(cx, id!(panel.show))
+        self.animator_in_state(cx, id!(panel.open))
     }
 
     pub fn set_open(&mut self, cx: &mut Cx, open: bool) {
         if open {
-            self.animator_play(cx, id!(panel.show));
+            self.animator_play(cx, id!(panel.open));
         } else {
-            self.animator_play(cx, id!(panel.hide));
+            self.animator_play(cx, id!(panel.close));
         }
     }
 }

@@ -18,18 +18,17 @@ live_design! {
 
     Panel = {{Panel}} {
         flow: Overlay,
-        width: Fit,
+        width: 300,
         height: Fill,
 
         open_content = <FadeView> {
-            width: 300
+            width: Fill
             height: Fill
         }
 
         persistent_content = <View> {
             height: Fit
-            width: 110
-            flow: Right
+            width: Fit
         }
 
         animator: {
@@ -39,20 +38,20 @@ live_design! {
                     redraw: true,
                     from: {all: Forward {duration: 0.3}}
                     ease: ExpDecay {d1: 0.80, d2: 0.97}
-                    apply: {open_content = { width: 300, draw_bg: {opacity: 1.0} }}
+                    apply: {width: 300, open_content = { draw_bg: {opacity: 1.0} }}
                 }
                 hide = {
                     redraw: true,
                     from: {all: Forward {duration: 0.3}}
                     ease: ExpDecay {d1: 0.80, d2: 0.97}
-                    apply: {open_content = { width: 110, draw_bg: {opacity: 0.0} }}
+                    apply: {width: 110, open_content = { draw_bg: {opacity: 0.0} }}
                 }
             }
         }
     }
 }
 
-#[derive(Live, LiveHook, Widget)]
+#[derive(Live, Widget, LiveHook)]
 pub struct Panel {
     #[deref]
     view: View,
@@ -64,7 +63,6 @@ pub struct Panel {
 impl Widget for Panel {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
         self.view.handle_event(cx, event, scope);
-        self.widget_match_event(cx, event, scope);
 
         if self.animator_handle_event(cx, event).must_redraw() {
             self.redraw(cx);
@@ -73,25 +71,6 @@ impl Widget for Panel {
 
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
         self.view.draw_walk(cx, scope, walk)
-    }
-}
-
-impl WidgetMatchEvent for Panel {
-    fn handle_actions(&mut self, cx: &mut Cx, actions: &Actions, _scope: &mut Scope) {
-        let close = self.button(id!(close_panel_button));
-        let open = self.button(id!(open_panel_button));
-
-        if close.clicked(&actions) {
-            close.set_visible(false);
-            open.set_visible(true);
-            self.animator_play(cx, id!(panel.hide));
-        }
-
-        if open.clicked(&actions) {
-            open.set_visible(false);
-            close.set_visible(true);
-            self.animator_play(cx, id!(panel.show));
-        }
     }
 }
 

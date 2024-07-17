@@ -1,5 +1,3 @@
-use std::ops::Not;
-
 use makepad_widgets::*;
 
 use crate::panel::PanelWidgetExt;
@@ -12,6 +10,7 @@ live_design!(
     Ui = {{Ui}} {
         align: {x: 0.5, y: 0.5}
         body = <View> {
+            flow: Overlay
             padding: {top: 32}
             panel = <Panel> {
                 persistent_content = {
@@ -28,6 +27,7 @@ live_design!(
                     }
                 }
             }
+            do = <Button> {text: "do", margin: {left: 500}}
         }
     }
 );
@@ -41,6 +41,12 @@ pub struct Ui {
 impl Widget for Ui {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
         if let Event::Actions(actions) = event {
+            if self.button(id!(do)).clicked(actions) {
+                println!("do");
+                self.panel(id!(panel)).apply_over(cx, live! {width: 10});
+                self.redraw(cx);
+            }
+
             if self.button(id!(toggle)).clicked(actions) {
                 let panel = self.panel(id!(panel));
                 panel.set_open(cx, !panel.is_open(cx));

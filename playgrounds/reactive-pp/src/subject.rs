@@ -1,6 +1,34 @@
 use makepad_widgets::*;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
+pub trait Notify {
+    /// Notify `self` that the subject with the given id has been updated.
+    fn notify(&mut self, id: usize);
+}
+
+pub trait Notified {
+    /// Check if the subject with the given id has been updated.
+    fn notified(&self, id: usize) -> bool;
+}
+
+impl Notify for Cx {
+    fn notify(&mut self, id: usize) {
+        self.action(SubjectChanged { id });
+    }
+}
+
+impl Notified for Event {
+    fn notified(&self, id: usize) -> bool {
+        match self {
+            Event::Actions(actions) => actions
+                .iter()
+                .find_map(|action| action.downcast_ref::<SubjectChanged>())
+                .map_or(false, |subject_changed| subject_changed.id == id),
+            _ => false,
+        }
+    }
+}
+
 /// Read-only guard returned by get.
 // This is just to avoid exposing the RwLockReadGuard directly.
 pub struct ReadGuard<'a, T: ?Sized> {
@@ -52,6 +80,11 @@ impl<T> Subject<T> {
         Self { id, value }
     }
 
+    /// Getter for the internal id of this subject.
+    pub fn id(&self) -> usize {
+        self.id
+    }
+
     /// Gets a immutable reference to the current value of this subject.
     ///
     /// Panics if the value has been taken out without replacing it before calling this.
@@ -60,24 +93,18 @@ impl<T> Subject<T> {
     }
 
     /// Sets the value of this subject and notifies makepad about this subject update.
-    pub fn set(&self, cx: &mut Cx, value: T) {
+    pub fn set<N: Notify>(&self, notifiable: &mut N, value: T) {
         *self.value.write().unwrap() = value;
-        cx.action(SubjectChanged { id: self.id })
+        notifiable.notify(self.id);
     }
 
-    pub fn update(&self, cx: &mut Cx, f: impl FnOnce(&mut T)) {
+    pub fn update<N: Notify>(&self, notifiable: &mut N, f: impl FnOnce(&mut T)) {
         f(&mut *self.value.write().unwrap());
-        cx.action(SubjectChanged { id: self.id })
+        notifiable.notify(self.id);
     }
 
     /// Check if this subject has been changed.
-    pub fn changed(&mut self, event: &Event) -> bool {
-        match event {
-            Event::Actions(actions) => actions
-                .iter()
-                .find_map(|action| action.downcast_ref::<SubjectChanged>())
-                .map_or(false, |subject_changed| subject_changed.id == self.id),
-            _ => false,
-        }
+    pub fn changed<N: Notified>(&mut self, notified: &N) -> bool {
+        notified.notified(self.id)
     }
 }

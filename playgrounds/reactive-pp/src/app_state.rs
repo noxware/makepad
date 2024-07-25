@@ -2,12 +2,14 @@ use crate::subject::{Mailbox, Subject};
 use makepad_widgets::*;
 
 pub struct AppState {
+    pub mailbox: Mailbox,
     pub counter: Subject<i32>,
 }
 
 impl Default for AppState {
     fn default() -> Self {
         Self {
+            mailbox: Mailbox::new(),
             counter: Subject::new(0),
         }
     }

@@ -1,0 +1,9 @@
+[package]
+name = "meh"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+makepad-widgets = { path = "../../widgets" }
+
+[workspace]

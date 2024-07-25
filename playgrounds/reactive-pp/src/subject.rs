@@ -1,31 +1,77 @@
 use makepad_widgets::*;
-use std::sync::{Arc, RwLock, RwLockReadGuard};
+use std::{
+    collections::HashSet,
+    sync::{Arc, RwLock, RwLockReadGuard},
+};
 
 pub trait Notify {
     /// Notify `self` that the subject with the given id has been updated.
-    fn notify(&mut self, id: usize);
+    fn notify(&mut self, id: Id);
 }
 
 pub trait Notified {
     /// Check if the subject with the given id has been updated.
-    fn notified(&self, id: usize) -> bool;
+    fn notified(&self, id: Id) -> bool;
 }
 
 impl Notify for Cx {
-    fn notify(&mut self, id: usize) {
-        self.action(SubjectChanged { id });
+    fn notify(&mut self, id: Id) {
+        self.action(id);
     }
 }
 
 impl Notified for Event {
-    fn notified(&self, id: usize) -> bool {
+    fn notified(&self, id: Id) -> bool {
         match self {
             Event::Actions(actions) => actions
                 .iter()
-                .find_map(|action| action.downcast_ref::<SubjectChanged>())
-                .map_or(false, |subject_changed| subject_changed.id == id),
+                .find_map(|action| action.downcast_ref::<Id>())
+                .map_or(false, |changed_id| *changed_id == id),
             _ => false,
         }
+    }
+}
+
+/// Thread-safe built-in implementation of `Notify` and `Notified` traits.
+#[derive(Default, Clone)]
+pub struct Mailbox {
+    notifications: Arc<RwLock<HashSet<Id>>>,
+}
+
+impl Notify for Mailbox {
+    fn notify(&mut self, id: Id) {
+        self.notifications.write().unwrap().insert(id);
+    }
+}
+
+impl Notified for Mailbox {
+    fn notified(&self, id: Id) -> bool {
+        self.notifications.read().unwrap().contains(&id)
+    }
+}
+
+impl Mailbox {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn consume(&mut self) -> impl Iterator<Item = Id> + '_ {
+        let mut notifications = self.notifications.write().unwrap();
+        let notifications = std::mem::take(&mut *notifications);
+        notifications.into_iter()
+    }
+}
+
+/// Unique identifier for a subject.
+///
+/// - Abstracts away the internal id type of a subject.
+/// - In Makepad, it can be dispatched directly as an action.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Id(usize);
+
+impl From<usize> for Id {
+    fn from(id: usize) -> Self {
+        Self(id)
     }
 }
 
@@ -49,18 +95,12 @@ impl<'a, T: ?Sized> From<RwLockReadGuard<'a, T>> for ReadGuard<'a, T> {
     }
 }
 
-/// Action dispatched when a subject is set.
-#[derive(Debug)]
-pub struct SubjectChanged {
-    id: usize,
-}
-
 /// A minimalistic value container that notifies makepad when its value is set.
 ///
 /// Provides reactive workflows useful for handling app-level state.
 /// This is a bit inspired on Flutter's `ValueNotifier`.
 pub struct Subject<T> {
-    id: usize,
+    id: Id,
     value: Arc<RwLock<T>>,
 }
 
@@ -77,11 +117,12 @@ impl<T> Subject<T> {
     pub fn new(initial_value: T) -> Self {
         let value = Arc::new(RwLock::new(initial_value));
         let id = Arc::as_ptr(&value) as usize;
+        let id = id.into();
         Self { id, value }
     }
 
     /// Getter for the internal id of this subject.
-    pub fn id(&self) -> usize {
+    pub fn id(&self) -> Id {
         self.id
     }
 

@@ -1,4 +1,4 @@
-use crate::subject::Subject;
+use crate::subject::{Mailbox, Subject};
 use makepad_widgets::*;
 
 pub struct AppState {
@@ -27,10 +27,12 @@ impl AppState {
 
     pub fn increment_counter_async(&mut self, cx: &mut Cx, delay_secs: f64) {
         // Crap... makepad's cx is not Send.
+        let mut mailbox = Mailbox::new();
         let counter = self.counter.clone();
+
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::from_secs_f64(delay_secs));
-            counter.update(cx, |value| *value += 1);
+            counter.update(&mut mailbox, |value| *value += 1);
         });
     }
 }

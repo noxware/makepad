@@ -13,6 +13,9 @@ live_design!(
             width: Fit
             flow: Down
             align: {x: 0.5, y: 0.5}
+            increment_async = <Button> {
+                text: "+ (in 5 seconds)"
+            }
             increment = <Button> {
                 text: "+"
             }
@@ -22,6 +25,7 @@ live_design!(
             decrement = <Button> {
                 text: "-"
             }
+
         }
     }
 );
@@ -66,6 +70,10 @@ impl WidgetMatchEvent for Ui {
 
         if self.button(id!(decrement)).clicked(actions) {
             app_state.decrement_counter(cx);
+        }
+
+        if self.button(id!(increment_async)).clicked(actions) {
+            app_state.increment_counter_async(cx, 5.0);
         }
     }
 }

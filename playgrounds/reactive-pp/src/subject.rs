@@ -1,7 +1,25 @@
 use makepad_widgets::*;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
-type ReadGuard<'a, T> = RwLockReadGuard<'a, T>;
+/// Read-only guard returned by get.
+// This is just to avoid exposing the RwLockReadGuard directly.
+pub struct ReadGuard<'a, T: ?Sized> {
+    guard: RwLockReadGuard<'a, T>,
+}
+
+impl<'a, T: ?Sized> std::ops::Deref for ReadGuard<'a, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &*self.guard
+    }
+}
+
+impl<'a, T: ?Sized> From<RwLockReadGuard<'a, T>> for ReadGuard<'a, T> {
+    fn from(guard: RwLockReadGuard<'a, T>) -> Self {
+        Self { guard }
+    }
+}
 
 /// Action dispatched when a subject is set.
 #[derive(Debug)]
@@ -38,7 +56,7 @@ impl<T> Subject<T> {
     ///
     /// Panics if the value has been taken out without replacing it before calling this.
     pub fn get(&self) -> ReadGuard<T> {
-        self.value.read().unwrap()
+        self.value.read().unwrap().into()
     }
 
     /// Sets the value of this subject and notifies makepad about this subject update.

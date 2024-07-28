@@ -38,6 +38,7 @@ workspace.members = [
 #    "libs/stitch",
 #    "libs/futures",
 #    "libs/wasm_bridge/test",
+    "examples/toggle_panel_overlay",
     "studio",
 #    "tools/video_mixer",
     "tools/cargo_makepad",

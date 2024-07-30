@@ -3790,6 +3790,7 @@ live_design! {
         root_view = <View> {}
     }
 
+    TogglePanel = <TogglePanelBase> {}
 
     DesignerOutlineTreeNode = <DesignerOutlineTreeNodeBase> {
         align: { y: 0.5 }

@@ -1,8 +1,4 @@
-use makepad_widgets::*;
-use std::{
-    collections::HashSet,
-    sync::{Arc, RwLock, RwLockReadGuard},
-};
+use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 pub trait Notify {
     /// Notify `self` that the subject with the given id has been updated.
@@ -12,54 +8,6 @@ pub trait Notify {
 pub trait Notified {
     /// Check if the subject with the given id has been updated.
     fn notified(&self, id: Id) -> bool;
-}
-
-impl Notify for Cx {
-    fn notify(&mut self, id: Id) {
-        self.action(id);
-    }
-}
-
-impl Notified for Event {
-    fn notified(&self, id: Id) -> bool {
-        match self {
-            Event::Actions(actions) => actions
-                .iter()
-                .find_map(|action| action.downcast_ref::<Id>())
-                .map_or(false, |changed_id| *changed_id == id),
-            _ => false,
-        }
-    }
-}
-
-/// Thread-safe built-in implementation of `Notify` and `Notified` traits.
-#[derive(Default, Clone)]
-pub struct Mailbox {
-    notifications: Arc<RwLock<HashSet<Id>>>,
-}
-
-impl Notify for Mailbox {
-    fn notify(&mut self, id: Id) {
-        self.notifications.write().unwrap().insert(id);
-    }
-}
-
-impl Notified for Mailbox {
-    fn notified(&self, id: Id) -> bool {
-        self.notifications.read().unwrap().contains(&id)
-    }
-}
-
-impl Mailbox {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn consume(&mut self) -> impl Iterator<Item = Id> + '_ {
-        let mut notifications = self.notifications.write().unwrap();
-        let notifications = std::mem::take(&mut *notifications);
-        notifications.into_iter()
-    }
 }
 
 /// Unique identifier for a subject.

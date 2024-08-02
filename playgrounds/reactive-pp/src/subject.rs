@@ -81,16 +81,16 @@ impl<T> Subject<T> {
         self.value.read().unwrap().into()
     }
 
-    /// Sets the value of this subject and notifies makepad about this subject update.
-    pub fn set<N: Notify>(&self, notifiable: &mut N, value: T) {
+    /// Sets the value of this subject and notifies a `Notify` about this subject update.
+    pub fn set<N: Notify>(&self, notify: &mut N, value: T) {
         *self.value.write().unwrap() = value;
-        notifiable.notify(self.id);
+        notify.notify(self.id);
     }
 
-    /// Updates the value hold by this subject and notifies makepad about this subject update.
-    pub fn update<N: Notify>(&self, notifiable: &mut N, f: impl FnOnce(&mut T)) {
+    /// Updates the value hold by this subject and notifies a `Notify` about this subject update.
+    pub fn update<N: Notify>(&self, notify: &mut N, f: impl FnOnce(&mut T)) {
         f(&mut *self.value.write().unwrap());
-        notifiable.notify(self.id);
+        notify.notify(self.id);
     }
 
     /// Check if this subject has been changed.

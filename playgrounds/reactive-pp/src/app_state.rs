@@ -26,6 +26,7 @@ impl AppState {
     }
 
     pub fn increment_counter_async(&mut self, _cx: &mut Cx, delay_secs: f64) {
+        // Crap... I can't use cx here.
         let counter = self.counter.clone();
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::from_secs_f64(delay_secs));

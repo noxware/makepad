@@ -1,10 +1,12 @@
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
+/// Let a type be notified of changes in a subject.
 pub trait Notify {
     /// Notify `self` that the subject with the given id has been updated.
     fn notify(&mut self, id: Id);
 }
 
+/// Let a type check if a subject has been updated.
 pub trait Notified {
     /// Check if the subject with the given id has been updated.
     fn notified(&self, id: Id) -> bool;
@@ -43,7 +45,7 @@ impl<'a, T: ?Sized> From<RwLockReadGuard<'a, T>> for ReadGuard<'a, T> {
     }
 }
 
-/// A minimalistic value container that notifies makepad when its value is set.
+/// A minimalistic value container that notifies a `Notify` when its value changes.
 ///
 /// Provides reactive workflows useful for handling app-level state.
 /// This is a bit inspired on Flutter's `ValueNotifier`.
@@ -75,8 +77,6 @@ impl<T> Subject<T> {
     }
 
     /// Gets a immutable reference to the current value of this subject.
-    ///
-    /// Panics if the value has been taken out without replacing it before calling this.
     pub fn get(&self) -> ReadGuard<T> {
         self.value.read().unwrap().into()
     }
@@ -87,6 +87,7 @@ impl<T> Subject<T> {
         notifiable.notify(self.id);
     }
 
+    /// Updates the value hold by this subject and notifies makepad about this subject update.
     pub fn update<N: Notify>(&self, notifiable: &mut N, f: impl FnOnce(&mut T)) {
         f(&mut *self.value.write().unwrap());
         notifiable.notify(self.id);

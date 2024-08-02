@@ -1,6 +1,8 @@
 use makepad_widgets::*;
 
-use crate::{app_state::AppState, subject::Notify};
+use crate::{
+    app_state::AppState, subject::Notify, subject_makepad_impl::clear_global_notifications,
+};
 
 live_design!(
     import makepad_widgets::base::*;
@@ -23,12 +25,10 @@ struct App {
 
 impl AppMain for App {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event) {
-        for notification in self.app_state.mailbox.consume() {
-            cx.notify(notification);
-        }
-
         self.ui
             .handle_event(cx, event, &mut Scope::with_data(&mut self.app_state));
+
+        clear_global_notifications();
     }
 }
 

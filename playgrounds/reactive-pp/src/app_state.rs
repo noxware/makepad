@@ -1,15 +1,13 @@
-use crate::subject::{Mailbox, Subject};
+use crate::{subject::Subject, subject_makepad_impl::GlobalNotify};
 use makepad_widgets::*;
 
 pub struct AppState {
-    pub mailbox: Mailbox,
     pub counter: Subject<i32>,
 }
 
 impl Default for AppState {
     fn default() -> Self {
         Self {
-            mailbox: Mailbox::new(),
             counter: Subject::new(0),
         }
     }
@@ -27,14 +25,11 @@ impl AppState {
         self.counter.set(cx, value - 1);
     }
 
-    pub fn increment_counter_async(&mut self, cx: &mut Cx, delay_secs: f64) {
-        // Crap... makepad's cx is not Send.
-        let mut mailbox = Mailbox::new();
+    pub fn increment_counter_async(&mut self, _cx: &mut Cx, delay_secs: f64) {
         let counter = self.counter.clone();
-
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::from_secs_f64(delay_secs));
-            counter.update(&mut mailbox, |value| *value += 1);
+            counter.update(&mut GlobalNotify::new(), |value| *value += 1);
         });
     }
 }

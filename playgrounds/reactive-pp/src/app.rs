@@ -1,8 +1,6 @@
 use makepad_widgets::*;
 
-use crate::{
-    app_state::AppState, subject::Notify, subject_makepad_impl::clear_global_notifications,
-};
+use crate::{app_state::AppState, subject_makepad_impl::clear_global_notifications};
 
 live_design!(
     import makepad_widgets::base::*;

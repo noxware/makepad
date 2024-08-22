@@ -35,8 +35,6 @@ workspace.members = [
   "examples/slides",
   "examples/graph",
   "examples/image_viewer",
-  "examples/hello_world_widgets",
-  "examples/reactive-topic-experiment",
   #    "libs/stitch",
   #    "libs/futures",
   #    "libs/wasm_bridge/test",

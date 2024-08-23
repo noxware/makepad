@@ -66,11 +66,13 @@ impl Widget for Agents {
     }
 
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
-        self.draw_bg.begin(cx, walk, self.layout);
+        cx.begin_turtle(walk, self.layout);
+        // self.draw_bg.begin(cx, walk, self.layout);
         self.items.iter_mut().for_each(|(_, item)| {
             item.draw_all(cx, scope);
         });
-        self.draw_bg.end(cx);
+        // self.draw_bg.end(cx);
+        cx.end_turtle();
         DrawStep::done()
     }
 }

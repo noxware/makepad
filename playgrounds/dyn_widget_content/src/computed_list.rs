@@ -55,11 +55,7 @@ impl ComputedList {
 }
 
 impl ComputedListRef {
-    pub fn compute_from<T, I: Iterator<Item = T>>(
-        &self,
-        iter: I,
-        f: impl FnMut(T) -> WidgetRef,
-    ) {
+    pub fn compute_from<T, I: Iterator<Item = T>>(&self, iter: I, f: impl FnMut(T) -> WidgetRef) {
         if let Some(mut inner) = self.borrow_mut() {
             inner.compute_from(iter, f);
         }

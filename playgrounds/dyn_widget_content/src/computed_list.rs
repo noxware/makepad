@@ -1,9 +1,6 @@
 use makepad_widgets::*;
 
 live_design!(
-    import makepad_widgets::base::*;
-    import makepad_widgets::theme_desktop_dark::*;
-
     ComputedList = {{ComputedList}} {
         flow: Down,
         width: Fill,
@@ -11,6 +8,8 @@ live_design!(
     }
 );
 
+/// Minimalistic list of widgets mapped from your data, eagerly rendered and
+/// with a known size.
 #[derive(Live, Widget, LiveHook)]
 pub struct ComputedList {
     #[walk]
@@ -45,6 +44,7 @@ impl Widget for ComputedList {
 }
 
 impl ComputedList {
+    /// Build each widget from mapped from your data.
     pub fn compute_from<T, I: Iterator<Item = T>>(
         &mut self,
         iter: I,
@@ -52,9 +52,15 @@ impl ComputedList {
     ) {
         self.items = iter.map(f).collect();
     }
+
+    /// Iterate over the current items/widgets.
+    pub fn items(&self) -> impl Iterator<Item = &WidgetRef> {
+        self.items.iter()
+    }
 }
 
 impl ComputedListRef {
+    /// Calls `compute_from` on the inner widget.
     pub fn compute_from<T, I: Iterator<Item = T>>(&self, iter: I, f: impl FnMut(T) -> WidgetRef) {
         if let Some(mut inner) = self.borrow_mut() {
             inner.compute_from(iter, f);

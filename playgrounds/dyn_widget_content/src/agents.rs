@@ -33,9 +33,8 @@ pub struct Agents {
     layout: Layout,
 
     #[redraw]
-    #[live]
-    draw_bg: DrawQuad,
-
+    #[rust]
+    area: Area,
 
     #[live]
     item_template: Option<LivePtr>,
@@ -44,7 +43,7 @@ pub struct Agents {
     items: Vec<(usize, WidgetRef)>,
 
     #[rust]
-    initialized: bool
+    initialized: bool,
 }
 
 const DATA: [&str; 3] = ["a", "b", "c"];
@@ -53,10 +52,14 @@ impl Widget for Agents {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
         if !self.initialized {
             self.initialized = true;
-            self.items = DATA.iter().enumerate().map(|(i, _)| {
-                let item = WidgetRef::new_from_ptr(cx, self.item_template);
-                (i, item)
-            }).collect();
+            self.items = DATA
+                .iter()
+                .enumerate()
+                .map(|(i, _)| {
+                    let item = WidgetRef::new_from_ptr(cx, self.item_template);
+                    (i, item)
+                })
+                .collect();
             dbg!(self.items.len());
         }
 
@@ -67,18 +70,12 @@ impl Widget for Agents {
 
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
         cx.begin_turtle(walk, self.layout);
-        // self.draw_bg.begin(cx, walk, self.layout);
         self.items.iter_mut().for_each(|(_, item)| {
             item.draw_all(cx, scope);
         });
-        // self.draw_bg.end(cx);
-        cx.end_turtle();
+        cx.end_turtle_with_area(&mut self.area);
         DrawStep::done()
     }
 }
 
-impl LiveHook for Agents {
-    fn after_new_from_doc(&mut self, cx:&mut Cx) {
-        
-    }
-}
+impl LiveHook for Agents {}

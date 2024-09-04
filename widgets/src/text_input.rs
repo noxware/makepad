@@ -44,6 +44,14 @@ pub struct TextInput {
 }
 
 impl TextInput {
+    pub fn has_key_focus(&self, cx: &Cx) -> bool {
+        cx.has_key_focus(self.draw_bg.area())
+    }
+
+    pub fn cursor(&self) -> Cursor {
+        self.cursor
+    }
+
     pub fn set_key_focus(&self, cx: &mut Cx) {
         cx.set_key_focus(self.draw_bg.area());
     }
@@ -634,6 +642,14 @@ pub enum TextInputAction {
 }
 
 impl TextInputRef {
+    pub fn has_key_focus(&self, cx: &Cx) -> bool {
+        self.borrow().map_or(false, |inner| inner.has_key_focus(cx))
+    }
+
+    pub fn cursor(&self) -> Cursor {
+        self.borrow().map_or(Cursor::default(), |inner| inner.cursor())
+    }
+
     pub fn changed(&self, actions: &Actions) -> Option<String> {
         if let TextInputAction::Change(val) = actions.find_widget_action_cast(self.widget_uid()) {
             return Some(val);

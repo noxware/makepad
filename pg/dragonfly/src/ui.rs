@@ -1,5 +1,5 @@
 use makepad_widgets::*;
-use crate::dragonfly::{self, Dragonfly, Mutator};
+use crate::dragonfly::{Dragonfly};
 
 live_design!(
     import makepad_widgets::base::*;
@@ -37,10 +37,10 @@ impl Widget for Ui {
 }
 
 impl LiveHook for Ui {
-    fn after_new_from_doc(&mut self, cx:&mut Cx) {
-        self.dragonfly.spawn(|mutator: Mutator| {
+    fn after_new_from_doc(&mut self, _cx:&mut Cx) {
+        self.dragonfly.spawn(|df: Dragonfly| {
             std::thread::sleep(std::time::Duration::from_secs(3));
-            mutator.mutate(|ui: &mut Self, cx: &mut Cx| {
+            df.run(|ui: &mut Self, cx: &mut Cx| {
                 println!("Mutating...");
                 ui.label(id!(body)).set_text("Hello, Dragonfly!");
                 ui.redraw(cx);

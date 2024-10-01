@@ -21,7 +21,7 @@ pub struct Ui {
     #[deref]
     deref: Window,
 
-    #[rust(UiRunner::new())]
+    #[rust]
     ui_runner: UiRunner,
 }
 

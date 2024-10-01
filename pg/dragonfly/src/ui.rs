@@ -28,7 +28,7 @@ pub struct Ui {
 impl Widget for Ui {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
         self.deref.handle_event(cx, event, scope);
-        self.dragonfly.clone().handle(self, cx, event);
+        self.dragonfly.handle(cx, event, self);
     }
 
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
@@ -40,10 +40,9 @@ impl LiveHook for Ui {
     fn after_new_from_doc(&mut self, _cx:&mut Cx) {
         self.dragonfly.spawn(|df: Dragonfly| {
             std::thread::sleep(std::time::Duration::from_secs(3));
-            df.run(|ui: &mut Self, cx: &mut Cx| {
-                println!("Mutating...");
-                ui.label(id!(body)).set_text("Hello, Dragonfly!");
-                ui.redraw(cx);
+            df.ui(|s: &mut Self, cx: &mut Cx| {
+                s.label(id!(body)).set_text("Hello, Dragonfly!");
+                s.redraw(cx);
             });
         });
     }

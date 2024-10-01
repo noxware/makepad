@@ -8,7 +8,7 @@ use makepad_widgets::*;
 /// 
 /// The name "Dragonfly" is inspired by the insect's ability to move in all directions.
 /// (ctually, it's just the first word it came to my mind, I accept suggestions.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Dragonfly {
     id: usize,
 }
@@ -32,7 +32,7 @@ impl Dragonfly {
     /// 
     /// If you stored this instance in the target itself (for example, your widget),
     /// you will need to call this like `self.dragonfly.clone().handle(self, cx, event)`.
-    pub fn handle<T: 'static>(&self, target: &mut T, cx: &mut Cx, event: &Event) {
+    pub fn handle<T: 'static>(self, cx: &mut Cx, event: &Event, target: &mut T) {
         if let Event::Actions(actions) = event {
             for action in actions {
                 if let Some(action) = action.downcast_ref::<DragonflyAction<T>>() {
@@ -49,7 +49,7 @@ impl Dragonfly {
     }
 
     /// Run the provided closure on the UI thread.
-    pub fn run<T: 'static>(&self, f: impl FnOnce(&mut T, &mut Cx) + Send + 'static) {
+    pub fn ui<T: 'static>(self, f: impl FnOnce(&mut T, &mut Cx) + Send + 'static) {
         let action = DragonflyAction {
             f: Arc::new(Mutex::new(Some(Box::new(f)))),
             id: self.id,
@@ -62,10 +62,9 @@ impl Dragonfly {
     /// 
     /// This is the same as cloning the `Dragonfly` instance and calling
     /// `std::thread::spawn` manually.
-    pub fn spawn(&self, f: impl FnOnce(Dragonfly) + Send + 'static) {
-        let dragonfly = self.clone();
+    pub fn spawn(self, f: impl FnOnce(Dragonfly) + Send + 'static) {
         std::thread::spawn(move || {
-            f(dragonfly);
+            f(self);
         });
     }
 }

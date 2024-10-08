@@ -41,7 +41,7 @@ impl LiveHook for Ui {
         let ui = self.ui_runner;
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::from_secs(5));
-            ui.run(|s: &mut Self, cx| {
+            ui.defer(|s: &mut Self, cx| {
                 s.label(id!(body)).set_text("A dragonfly came here and blessed your text :)");
                 s.redraw(cx);
             });

@@ -1,8 +1,8 @@
-use std::sync::{Arc, Mutex};
 use makepad_widgets::*;
+use std::sync::{Arc, Mutex};
 
 /// Run code on the UI thread from another thread.
-/// 
+///
 /// Allows you to mix non-blocking threaded code, with code that reads and updates
 /// your widget in the UI thread.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -19,10 +19,10 @@ impl Default for UiRunner {
 
 impl UiRunner {
     /// Create a new isolated instance.
-    /// 
+    ///
     /// Functions scheduled thru this instance will not interfere with functions
     /// scheduled thru other instances.
-    /// 
+    ///
     /// The instance itself can be copied and passed around.
     pub fn new() -> Self {
         use std::sync::atomic::{AtomicUsize, Ordering};
@@ -32,18 +32,18 @@ impl UiRunner {
     }
 
     /// Handle all functions scheduled thru this instance.
-    /// 
+    ///
     /// You should call this once from yout `handle_event` method, like:
-    /// 
+    ///
     /// ```rust
     /// fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
     ///    // ... handle other stuff ...
     ///    self.ui_runner.handle(cx, event, self);
     /// }
     /// ```
-    /// 
+    ///
     /// Once a function has been handled, it will never run again.
-    pub fn handle<T: 'static>(self, cx: &mut Cx, event: &Event, target: &mut T) {
+    pub fn handle<T: 'static>(self, cx: &mut Cx, event: &Event, widget: &mut T) {
         if let Event::Actions(actions) = event {
             for action in actions {
                 if let Some(action) = action.downcast_ref::<UiRunnerAction<T>>() {
@@ -52,7 +52,7 @@ impl UiRunner {
                     }
 
                     if let Some(f) = action.f.lock().unwrap().take() {
-                        (f)(target, cx);
+                        (f)(widget, cx);
                     }
                 }
             }
@@ -60,11 +60,11 @@ impl UiRunner {
     }
 
     /// Schedule the provided closure to run on the UI thread.
-    /// 
+    ///
     /// Note: You will need to specify the type of the target widget, and it should
     /// match the target type being handled by the `UiRunner::handle` method, or it
     /// will be ignored.
-    pub fn run<T: 'static>(self, f: impl FnOnce(&mut T, &mut Cx) + Send + 'static) {
+    pub fn defer<T: 'static>(self, f: impl FnOnce(&mut T, &mut Cx) + Send + 'static) {
         let action = UiRunnerAction {
             f: Arc::new(Mutex::new(Some(Box::new(f)))),
             id: self.id,

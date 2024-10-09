@@ -282,6 +282,7 @@ impl Widget for FlatList {
     }
     
     fn draw_walk(&mut self, cx: &mut Cx2d, _scope:&mut Scope, walk: Walk) -> DrawStep {
+        dbg!(self.items.len());
         if self.draw_state.begin(cx, ()) {
             self.begin(cx, walk);
             return DrawStep::make_step()

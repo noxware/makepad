@@ -55,7 +55,7 @@ impl Widget for Ui {
                 if item.button(id!(button)).clicked(actions) {
                     let meta = item.meta(id!(fruit));
                     let fruit = meta.get_value::<Fruit>().unwrap();
-                    dbg!(&fruit);
+                    // dbg!(&fruit);
                     self.fruits.retain(|f| f.id != fruit.id);
                     self.redraw(cx);
                 }
@@ -108,6 +108,21 @@ fn fetch_fruits() -> Vec<Fruit> {
             id: 3,
             name: "Grape".into(),
             color: "Purple".into(),
+        },
+        Fruit {
+            id: 4,
+            name: "Orange".into(),
+            color: "Orange".into(),
+        },
+        Fruit {
+            id: 5,
+            name: "Pineapple".into(),
+            color: "Yellow".into(),
+        },
+        Fruit {
+            id: 6,
+            name: "Strawberry".into(),
+            color: "Red".into(),
         },
     ]
 }

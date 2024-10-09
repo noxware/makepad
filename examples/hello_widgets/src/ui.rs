@@ -11,7 +11,9 @@ live_design!(
         body = <View> {
             flow: Down,
             align: {x: 0.5, y: 0.5},
+            padding: 32,
             spacing: 32,
+            debug = <Button> {text: "Debug print fruits"},
             <Label> { text: "Which fruit do you like the most?" }
             list = <FlatList> {
                 flow: Down,
@@ -35,6 +37,9 @@ pub struct Ui {
 
     #[live]
     item_template: Option<LivePtr>,
+
+    #[rust]
+    fruits: Vec<Fruit>,
 }
 
 impl Widget for Ui {
@@ -42,11 +47,17 @@ impl Widget for Ui {
         self.deref.handle_event(cx, event, scope);
 
         if let Event::Actions(actions) = event {
+            if self.button(id!(debug)).clicked(actions) {
+                dbg!(&self.fruits);
+            }
+
             for (_, item) in self.flat_list(id!(list)).items_with_actions(actions) {
                 if item.button(id!(button)).clicked(actions) {
                     let meta = item.meta(id!(fruit));
                     let fruit = meta.get_value::<Fruit>().unwrap();
-                    dbg!(fruit);
+                    dbg!(&fruit);
+                    self.fruits.retain(|f| f.id != fruit.id);
+                    self.redraw(cx);
                 }
             }
         }
@@ -55,7 +66,7 @@ impl Widget for Ui {
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
         while let Some(widget) = self.deref.draw_walk(cx, scope, walk).step() {
             if let Some(mut list) = widget.as_flat_list().borrow_mut() {
-                for fruit in fetch_fruits() {
+                for fruit in self.fruits.iter() {
                     let widget = list.item(cx, LiveId::unique(), live_id!(Item)).unwrap();
                     widget.button(id!(button)).set_text(&fruit.name);
                     widget.meta(id!(fruit)).set_value(fruit.clone());
@@ -69,7 +80,9 @@ impl Widget for Ui {
 }
 
 impl LiveHook for Ui {
-    fn after_new_from_doc(&mut self, cx: &mut Cx) {}
+    fn after_new_from_doc(&mut self, cx: &mut Cx) {
+        self.fruits = fetch_fruits();
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

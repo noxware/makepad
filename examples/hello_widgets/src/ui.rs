@@ -6,19 +6,24 @@ live_design!(
     import makepad_widgets::base::*;
     import makepad_widgets::theme_desktop_dark::*;
     import crate::meta::Meta;
-    import crate::list::List;
 
     Ui = {{Ui}} {
-        item_template: <View> {
-            button = <Button> { width: Fill }
-            fruit = <Meta> {}
-        }
         body = <View> {
             flow: Down,
             align: {x: 0.5, y: 0.5},
             spacing: 32,
             <Label> { text: "Which fruit do you like the most?" }
-            list = <List> {flow: Down, height: Fit, width: Fill}
+            list = <FlatList> {
+                flow: Down,
+                height: Fill,
+                width: Fill,
+                Item = <View> {
+                    width: Fill,
+                    height: Fit,
+                    button = <Button> { width: Fill }
+                    fruit = <Meta> {}
+                }
+            }
         }
     }
 );
@@ -37,41 +42,34 @@ impl Widget for Ui {
         self.deref.handle_event(cx, event, scope);
 
         if let Event::Actions(actions) = event {
-            if let Some(list) = self.list(id!(list)).borrow() {
-                let clicked_fruit = list
-                    .items()
-                    .find(|item: &&WidgetRef| item.button(id!(button)).clicked(actions))
-                    .map(|item| item.meta(id!(fruit)).get_value::<Fruit>().unwrap().clone());
-
-                if let Some(fruit) = clicked_fruit {
-                    println!(
-                        "You liked the {} {}, with id {}",
-                        fruit.color, fruit.name, fruit.id
-                    );
+            for (_, item) in self.flat_list(id!(list)).items_with_actions(actions) {
+                if item.button(id!(button)).clicked(actions) {
+                    let meta = item.meta(id!(fruit));
+                    let fruit = meta.get_value::<Fruit>().unwrap();
+                    dbg!(fruit);
                 }
             }
         }
     }
 
     fn draw_walk(&mut self, cx: &mut Cx2d, scope: &mut Scope, walk: Walk) -> DrawStep {
-        self.deref.draw_walk(cx, scope, walk)
+        while let Some(widget) = self.deref.draw_walk(cx, scope, walk).step() {
+            if let Some(mut list) = widget.as_flat_list().borrow_mut() {
+                for fruit in fetch_fruits() {
+                    let widget = list.item(cx, LiveId::unique(), live_id!(Item)).unwrap();
+                    widget.button(id!(button)).set_text(&fruit.name);
+                    widget.meta(id!(fruit)).set_value(fruit.clone());
+                    widget.draw_all(cx, scope);
+                }
+            }
+        }
+
+        DrawStep::done()
     }
 }
 
 impl LiveHook for Ui {
-    fn after_new_from_doc(&mut self, cx: &mut Cx) {
-        let items = fetch_fruits()
-            .iter()
-            .map(|fruit| {
-                let widget = WidgetRef::new_from_ptr(cx, self.item_template);
-                widget.button(id!(button)).set_text(&fruit.name);
-                widget.meta(id!(fruit)).set_value(fruit.clone());
-                widget
-            })
-            .collect::<Vec<_>>();
-
-        self.list(id!(list)).set_items(items);
-    }
+    fn after_new_from_doc(&mut self, cx: &mut Cx) {}
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -83,20 +81,20 @@ struct Fruit {
 
 fn fetch_fruits() -> Vec<Fruit> {
     vec![
-            Fruit {
-                id: 1,
-                name: "Apple".into(),
-                color: "Red".into(),
-            },
-            Fruit {
-                id: 2,
-                name: "Banana".into(),
-                color: "Yellow".into(),
-            },
-            Fruit {
-                id: 3,
-                name: "Grape".into(),
-                color: "Purple".into(),
-            },
-        ]
+        Fruit {
+            id: 1,
+            name: "Apple".into(),
+            color: "Red".into(),
+        },
+        Fruit {
+            id: 2,
+            name: "Banana".into(),
+            color: "Yellow".into(),
+        },
+        Fruit {
+            id: 3,
+            name: "Grape".into(),
+            color: "Purple".into(),
+        },
+    ]
 }

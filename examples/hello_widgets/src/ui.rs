@@ -46,8 +46,25 @@ live_design!(
         height: 32.0,
     }
 
+    CustomButton = <Button> {
+        width: Fill,
+        height: Fill,
+        draw_bg: {
+            fn pixel(self) -> vec4 {
+                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                sdf.box(0.0, 0.0, self.rect_size.x, self.rect_size.y, 0.5);
+                sdf.fill(vec4(#fff.xyz, self.hover * 0.3));
+                return sdf.result;
+            }
+        }
+    }
+
+    CustomSplit = <View> { width: 3, show_bg: true, draw_bg: {color: #fff}}
+
     Ui = {{Ui}} {
+        flow: Down,
         align: {x: 0.5, y: 0.5}
+        spacing: 8,
         show_bg: true,
         draw_bg: {
             color: #fff
@@ -62,33 +79,65 @@ live_design!(
                 color: #fff;
                 
             }
-            <SizedStripButton> {
+            a2 = <SizedStripButton> {
                 draw_bg: {
                     instance step: 1.0;
                     left_radius: 1.0;
                 }
             }
-            <SizedStripButton> {
+            a1 = <SizedStripButton> {
                 draw_bg: {
                     instance step: 2.0;
                 }
             }
-            <SizedStripButton> {
+            o0 = <SizedStripButton> {
                 draw_bg: {
                     instance step: 3.0;
                 }
             }
-            <SizedStripButton> {
+            b1 = <SizedStripButton> {
                 draw_bg: {
                     instance step: 4.0;
                 }
             }
-            <SizedStripButton> {
+            b2 = <SizedStripButton> {
                 draw_bg: {
                     instance step: 5.0;
                     right_radius: 1.0;
                 }
             }
+        }
+    
+        <View> {
+            width: (100.0 * 5),
+            height: 32.0,
+            show_bg: true,
+            draw_bg: {
+                fn pixel(self) -> vec4 {
+                    let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+    
+                    // relative radius, 1.0 means fully rounded
+                    // don't know why 0.5 is the min or why the multiplier is 0.25 instead of 0.5
+                    let r = mix(0.5, self.rect_size.y * 0.25, 1.0);
+    
+                    sdf.box(0.0, 0.0, self.rect_size.x, self.rect_size.y, r);
+    
+                    let fill_color = mix(#15859A, #fff, self.pos.x * 0.5);
+                    sdf.fill(fill_color);
+                    return sdf.result;
+                }
+                
+            }
+            <CustomButton> {}
+            <CustomSplit> {}
+            <CustomButton> {}
+            <CustomSplit> {}
+            <CustomButton> {}
+            <CustomSplit> {}
+            <CustomButton> {}
+            <CustomSplit> {}
+            <CustomButton> {}
+
         }
     }
 );

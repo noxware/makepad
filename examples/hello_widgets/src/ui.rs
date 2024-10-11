@@ -119,10 +119,16 @@ live_design!(
                     // relative radius, 1.0 means fully rounded
                     // don't know why 0.5 is the min or why the multiplier is 0.25 instead of 0.5
                     let r = mix(0.5, self.rect_size.y * 0.25, 1.0);
+
+                    let edge_color = #15859A;
+                    let middle_color = mix(edge_color, #fff, 0.5);
     
                     sdf.box(0.0, 0.0, self.rect_size.x, self.rect_size.y, r);
     
-                    let fill_color = mix(#15859A, #fff, self.pos.x * 0.5);
+                    // oszilate the color from edge_color to middle_color
+                    let blend_factor = abs(mix(-1.0, 1.0, self.pos.x));
+                    let fill_color = mix(middle_color, edge_color, blend_factor);
+
                     sdf.fill(fill_color);
                     return sdf.result;
                 }

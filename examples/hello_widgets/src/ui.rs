@@ -23,6 +23,8 @@ pub struct Ui {
 
 impl Widget for Ui {
     fn handle_event(&mut self, cx: &mut Cx, event: &Event, scope: &mut Scope) {
+        // will not work in main.rs
+        self.ui_runner().handle(cx, event, self);
         self.deref.handle_event(cx, event, scope);
     }
 
